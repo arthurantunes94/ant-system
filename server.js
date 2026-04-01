@@ -151,7 +151,7 @@ app.get("/jogos", async (req, res) => {
 });
 
 // Rota para obter o ranking das equipes
-app.get("/ranking/equipes", async (req, res) => {
+app.get("/ranking/atletas", async (req, res) => {
   const jogos = await prisma.jogo.findMany({
     include: {
       equipeA: {
@@ -160,40 +160,66 @@ app.get("/ranking/equipes", async (req, res) => {
       equipeB: {
         include: { atleta1: true, atleta2: true },
       },
-      vencedor: true,
+      vencedor: {
+        include: { atleta1: true, atleta2: true },
+      },
     },
   });
 
   const ranking = {};
 
-  // Calcula pontos e jogos para cada equipe
+  // Para cada jogo, contabilizamos os pontos dos atletas
   jogos.forEach((jogo) => {
-    const { equipeA, equipeB, vencedorId } = jogo;
+    const equipes = [jogo.equipeA, jogo.equipeB];
 
-    // Inicializa o ranking para as equipes, se ainda não existir
-    [equipeA, equipeB].forEach((equipe) => {
-      if (!ranking[equipe.id]) {
-        ranking[equipe.id] = {
-          equipe,
-          pontos: 0,
-          jogos: 0,
-        };
-      }
+    // Contabilizamos os jogos para cada atleta
+    equipes.forEach((equipe) => {
+      [equipe.atleta1, equipe.atleta2].forEach((atleta) => {
+        if (!ranking[atleta.id]) {
+          ranking[atleta.id] = {
+            atleta,
+            pontos: 0,
+            jogos: 0,
+            vitorias: 0,
+            derrotas: 0,
+          };
+        }
 
-      // Incrementa o número de jogos para ambas as equipes
-      ranking[equipe.id].jogos++;
+        ranking[atleta.id].jogos++;
+      });
     });
 
-    // Atribui pontos para a equipe vencedora
-    ranking[vencedorId].pontos += 3;
+    // vencedor ganha pontos
+    const vencedores = [jogo.vencedor.atleta1, jogo.vencedor.atleta2];
+    const perdedores =
+      jogo.vencedorId === jogo.equipeA.id
+        ? [jogo.equipeB.atleta1, jogo.equipeB.atleta2]
+        : [jogo.equipeA.atleta1, jogo.equipeA.atleta2];
+
+    // Cada atleta vencedor ganha 3 pontos
+    vencedores.forEach((atleta) => {
+      ranking[atleta.id].pontos += 3;
+      ranking[atleta.id].vitorias++;
+    });
+
+    // Cada atleta perdedor ganha 0 pontos
+    perdedores.forEach((atleta) => {
+      ranking[atleta.id].derrotas++;
+    });
   });
 
-  // Ordena o ranking por pontos
-  const resultado = Object.values(ranking).sort((a, b) => b.pontos - a.pontos);
+  // Calculamos o winrate e ordenamos por pontos
+  const resultado = Object.values(ranking)
+    .map((r) => ({
+      ...r,
+      winrate: r.jogos > 0 ? ((r.vitorias / r.jogos) * 100).toFixed(1) : 0,
+    }))
+    .sort((a, b) => b.pontos - a.pontos);
 
   res.json(resultado);
 });
 
+// Iniciando o servidor
 app.listen(3000, () => {
   console.log("Servidor rodando em http://localhost:3000");
 });

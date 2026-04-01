@@ -20,6 +20,12 @@ export async function getRankingEquipes() {
   return res.json();
 }
 
+// Função para obter o ranking dos atletas
+export async function getRankingAtletas() {
+  const res = await fetch("http://localhost:3000/ranking/atletas");
+  return res.json();
+}
+
 // Função para criar um novo atleta
 export async function createAtleta(data) {
   const response = await fetch(`${API_URL}/atletas`, {
