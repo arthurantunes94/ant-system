@@ -21,9 +21,8 @@ function RankingAtletas() {
         {ranking.map((r) => (
           <li key={r.atleta.id}>
             <strong>{r.atleta.nome} </strong>
-            Pontos: {r.pontos} | Jogos: {r.jogos}
-            Vitórias: {r.vitorias} | Derrotas: {r.derrotas} | 📊 Winrate:{" "}
-            {r.winrate}%
+            Pontos: {r.pontos} | Jogos: {r.jogos} | Vitórias: {r.vitorias} |
+            Derrotas: {r.derrotas} | 📊 Winrate: {r.winrate}%
           </li>
         ))}
       </ol>

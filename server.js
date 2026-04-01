@@ -5,6 +5,9 @@ const { PrismaClient } = require("@prisma/client");
 const app = express();
 const prisma = new PrismaClient();
 
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+
 app.use(cors());
 app.use(express.json());
 
@@ -12,8 +15,66 @@ app.get("/", (req, res) => {
   res.send("API ANT funcionando 🚀");
 });
 
+// Middleware de autenticação
+function auth(req, res, next) {
+  const token = req.headers.authorization;
+
+  if (!token) {
+    return res.status(401).json({ erro: "Token não enviado" });
+  }
+
+  try {
+    const decoded = jwt.verify(token, "segredo_super_secreto");
+    req.userId = decoded.userId;
+    next();
+  } catch {
+    res.status(401).json({ erro: "Token inválido" });
+  }
+}
+
+// Rota para registro de usuário
+app.post("/register", async (req, res) => {
+  const { email, password } = req.body;
+
+  const hashedPassword = await bcrypt.hash(password, 10);
+
+  const user = await prisma.user.create({
+    data: {
+      email,
+      password: hashedPassword,
+    },
+  });
+
+  res.json(user);
+});
+
+// Rota para login de usuário
+app.post("/login", async (req, res) => {
+  const { email, password } = req.body;
+
+  const user = await prisma.user.findUnique({
+    where: { email },
+  });
+
+  if (!user) {
+    return res.status(404).json({ erro: "Usuário não encontrado" });
+  }
+
+  const valid = await bcrypt.compare(password, user.password);
+
+  if (!valid) {
+    return res.status(401).json({ erro: "Senha inválida" });
+  }
+
+  const token = jwt.sign({ userId: user.id }, "segredo_super_secreto", {
+    expiresIn: "1d",
+  });
+
+  res.json({ token });
+});
+
 // Rota para criar um novo atleta
-app.post("/atletas", async (req, res) => {
+app.post("/atletas", auth, async (req, res) => {
   const { nome, email } = req.body;
 
   try {
@@ -56,7 +117,7 @@ app.delete("/atletas/:id", async (req, res) => {
 });
 
 // Rota para criar uma nova equipe
-app.post("/equipes", async (req, res) => {
+app.post("/equipes", auth, async (req, res) => {
   const { atleta1Id, atleta2Id } = req.body;
 
   const equipe = await prisma.equipe.create({
@@ -82,7 +143,7 @@ app.get("/equipes", async (req, res) => {
 });
 
 // Rota para criar um novo torneio
-app.post("/torneios", async (req, res) => {
+app.post("/torneios", auth, async (req, res) => {
   const { nome, data } = req.body;
 
   const torneio = await prisma.torneio.create({
@@ -102,7 +163,7 @@ app.get("/torneios", async (req, res) => {
 });
 
 // Rota para criar um novo jogo
-app.post("/jogos", async (req, res) => {
+app.post("/jogos", auth, async (req, res) => {
   const { equipeAId, equipeBId, pontuacaoA, pontuacaoB, torneioId } = req.body;
 
   const vencedorId = pontuacaoA > pontuacaoB ? equipeAId : equipeBId;
@@ -159,6 +220,9 @@ app.get("/ranking/atletas", async (req, res) => {
       },
       equipeB: {
         include: { atleta1: true, atleta2: true },
+      },
+      orderBy: {
+        data: "desc", // opcional: últimos primeiro
       },
       vencedor: {
         include: { atleta1: true, atleta2: true },

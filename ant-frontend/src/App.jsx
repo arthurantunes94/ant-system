@@ -1,14 +1,20 @@
-import Atletas from "./pages/Atletas";
-import Jogos from "./pages/Jogos";
-import RankingAtletas from "./pages/RankingAtletas";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Layout from "./components/Layout";
+import Dashboard from "./pages/Dashboard";
+import Ranking from "./pages/Ranking";
+import Torneios from "./pages/Torneios";
 
 function App() {
   return (
-    <div>
-      <Atletas />
-      <Jogos />
-      <RankingAtletas />
-    </div>
+    <BrowserRouter>
+      <Layout>
+        <Routes>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/ranking" element={<Ranking />} />
+          <Route path="/torneios" element={<Torneios />} />
+        </Routes>
+      </Layout>
+    </BrowserRouter>
   );
 }
 

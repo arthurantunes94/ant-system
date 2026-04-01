@@ -2,6 +2,29 @@ const API_URL = "http://localhost:3000";
 
 // Funções para interagir com a API do backend
 
+// Função para obter os headers de autenticação
+function getAuthHeaders() {
+  const token = localStorage.getItem("token");
+
+  return {
+    "Content-Type": "application/json",
+    Authorization: token,
+  };
+}
+
+// Função para login
+export async function login(email, password) {
+  const res = await fetch("http://localhost:3000/login", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ email, password }),
+  });
+
+  return res.json();
+}
+
 // Função para obter os atletas
 export async function getAtletas() {
   const response = await fetch(`${API_URL}/atletas`);
@@ -30,9 +53,7 @@ export async function getRankingAtletas() {
 export async function createAtleta(data) {
   const response = await fetch(`${API_URL}/atletas`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers: getAuthHeaders(),
     body: JSON.stringify(data),
   });
 
