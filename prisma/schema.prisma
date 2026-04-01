@@ -14,7 +14,54 @@ datasource db {
 }
 
 model Atleta {
-  id    Int     @id @default(autoincrement())
-  nome  String
-  email String  @unique
+  id      Int     @id @default(autoincrement())
+  nome    String
+  email   String  @unique
+
+  equipes1 Equipe[] @relation("EquipeAtleta1")
+  equipes2 Equipe[] @relation("EquipeAtleta2")
+}
+
+model Equipe {
+  id        Int      @id @default(autoincrement())
+
+  atleta1Id Int
+  atleta2Id Int
+
+  atleta1   Atleta   @relation("EquipeAtleta1", fields: [atleta1Id], references: [id])
+  atleta2   Atleta   @relation("EquipeAtleta2", fields: [atleta2Id], references: [id])
+
+  jogosA    Jogo[]   @relation("EquipeA")
+  jogosB    Jogo[]   @relation("EquipeB")
+
+  vitorias  Jogo[]   @relation("Vencedor")
+}
+
+model Torneio {
+  id      Int     @id @default(autoincrement())
+  nome    String
+  data    DateTime
+
+  jogos   Jogo[]
+}
+
+model Jogo {
+  id          Int @id @default(autoincrement())
+
+  equipeAId   Int
+  equipeBId   Int
+
+  equipeA     Equipe @relation("EquipeA", fields: [equipeAId], references: [id])
+  equipeB     Equipe @relation("EquipeB", fields: [equipeBId], references: [id])
+
+  pontuacaoA  Int
+  pontuacaoB  Int
+
+  vencedorId  Int
+  vencedor    Equipe @relation("Vencedor", fields: [vencedorId], references: [id])
+
+  torneioId   Int
+  torneio     Torneio @relation(fields: [torneioId], references: [id])
+
+  data        DateTime @default(now())
 }

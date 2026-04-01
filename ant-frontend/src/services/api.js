@@ -5,6 +5,11 @@ export async function getAtletas() {
   return response.json();
 }
 
+export async function getJogos() {
+  const res = await fetch("http://localhost:3000/jogos");
+  return res.json();
+}
+
 export async function createAtleta(data) {
   const response = await fetch(`${API_URL}/atletas`, {
     method: "POST",
