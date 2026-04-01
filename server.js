@@ -150,6 +150,50 @@ app.get("/jogos", async (req, res) => {
   res.json(jogos);
 });
 
+// Rota para obter o ranking das equipes
+app.get("/ranking/equipes", async (req, res) => {
+  const jogos = await prisma.jogo.findMany({
+    include: {
+      equipeA: {
+        include: { atleta1: true, atleta2: true },
+      },
+      equipeB: {
+        include: { atleta1: true, atleta2: true },
+      },
+      vencedor: true,
+    },
+  });
+
+  const ranking = {};
+
+  // Calcula pontos e jogos para cada equipe
+  jogos.forEach((jogo) => {
+    const { equipeA, equipeB, vencedorId } = jogo;
+
+    // Inicializa o ranking para as equipes, se ainda não existir
+    [equipeA, equipeB].forEach((equipe) => {
+      if (!ranking[equipe.id]) {
+        ranking[equipe.id] = {
+          equipe,
+          pontos: 0,
+          jogos: 0,
+        };
+      }
+
+      // Incrementa o número de jogos para ambas as equipes
+      ranking[equipe.id].jogos++;
+    });
+
+    // Atribui pontos para a equipe vencedora
+    ranking[vencedorId].pontos += 3;
+  });
+
+  // Ordena o ranking por pontos
+  const resultado = Object.values(ranking).sort((a, b) => b.pontos - a.pontos);
+
+  res.json(resultado);
+});
+
 app.listen(3000, () => {
   console.log("Servidor rodando em http://localhost:3000");
 });
