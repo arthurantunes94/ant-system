@@ -6,11 +6,13 @@ function Atletas() {
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
 
+  // Função para carregar os atletas do backend
   async function carregarAtletas() {
     const data = await getAtletas();
     setAtletas(data);
   }
 
+  // Carrega os atletas ao montar o componente
   useEffect(() => {
     async function fetchData() {
       const data = await getAtletas();
@@ -20,6 +22,7 @@ function Atletas() {
     fetchData();
   }, []);
 
+  // Função para lidar com o envio do formulário de cadastro
   async function handleSubmit(e) {
     e.preventDefault();
 

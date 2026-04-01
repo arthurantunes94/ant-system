@@ -4,6 +4,7 @@ import { getJogos } from "../services/api";
 function Jogos() {
   const [jogos, setJogos] = useState([]);
 
+  // Carrega os jogos ao montar o componente
   useEffect(() => {
     async function fetchData() {
       const data = await getJogos();

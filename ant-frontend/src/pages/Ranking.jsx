@@ -4,6 +4,7 @@ import { getRankingEquipes } from "../services/api";
 function Ranking() {
   const [ranking, setRanking] = useState([]);
 
+  // Carrega o ranking das equipes ao montar o componente
   useEffect(() => {
     async function fetchData() {
       const data = await getRankingEquipes();
