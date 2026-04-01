@@ -283,6 +283,35 @@ app.get("/ranking/atletas", async (req, res) => {
   res.json(resultado);
 });
 
+// Rota para obter os jogos de um atleta específico
+app.get("/atletas/:id/jogos", async (req, res) => {
+  const id = Number(req.params.id);
+
+  const jogos = await prisma.jogo.findMany({
+    where: {
+      OR: [
+        { equipeA: { atleta1Id: id } },
+        { equipeA: { atleta2Id: id } },
+        { equipeB: { atleta1Id: id } },
+        { equipeB: { atleta2Id: id } },
+      ],
+    },
+    include: {
+      equipeA: {
+        include: { atleta1: true, atleta2: true },
+      },
+      equipeB: {
+        include: { atleta1: true, atleta2: true },
+      },
+    },
+    orderBy: {
+      data: "desc",
+    },
+  });
+
+  res.json(jogos);
+});
+
 // Iniciando o servidor
 app.listen(3000, () => {
   console.log("Servidor rodando em http://localhost:3000");
